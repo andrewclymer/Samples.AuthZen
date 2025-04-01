@@ -5,5 +5,27 @@ namespace AcmeCorp {
     
     policyset global {
         apply firstApplicable
+        policy doorAccess
     }
+   
+        condition IsEmployee Subject.Role == "employee"
+        condition InWorkingHours
+                          CurrentTime >= "08:00:00":time and
+                          CurrentTime < "21:00:00":time
+        condition OpenDoor ResourceType == "door" and Action == "open"
+    
+        attribute BuildingIsOnFire { id="buildingIsOnFire" type=boolean category=environmentCat}
+
+        policy doorAccess {
+            target clause OpenDoor
+            apply denyUnlessPermit
+    
+            // Employees can open the door during office hours only
+            rule mainDoor {
+                target clause Resource == "mainDoor"
+                permit
+                condition (IsEmployee and InWorkingHours) or BuildingIsOnFire
+            }
+        }
 }
+
